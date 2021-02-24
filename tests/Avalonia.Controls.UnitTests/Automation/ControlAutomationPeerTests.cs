@@ -112,6 +112,33 @@ namespace Avalonia.Controls.UnitTests.Automation
         }
 
         [Fact]
+        public void Updates_Children_When_Visibility_Changes()
+        {
+            var panel = new Panel
+            {
+                Children =
+                {
+                    new Border(),
+                    new Border(),
+                },
+            };
+
+            var root = new AutomationTestRoot(panel);
+            var target = ControlAutomationPeer.GetOrCreatePeer(panel);
+            var children = target.GetChildren();
+
+            Assert.Equal(2, children.Count);
+
+            panel.Children[1].IsVisible = false;
+            children = target.GetChildren();
+            Assert.Equal(1, children.Count);
+
+            panel.Children[1].IsVisible = true;
+            children = target.GetChildren();
+            Assert.Equal(2, children.Count);
+        }
+
+        [Fact]
         public void Exposes_Children_In_Control_Templates_With_IsControl_False()
         {
             var button = new Button

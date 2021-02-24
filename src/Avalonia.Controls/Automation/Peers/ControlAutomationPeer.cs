@@ -69,7 +69,7 @@ namespace Avalonia.Controls.Automation.Peers
 
             foreach (var child in children)
             {
-                if (child is Control c)
+                if (child is Control c && c.IsVisible)
                     ++result;
             }
 
@@ -89,7 +89,7 @@ namespace Avalonia.Controls.Automation.Peers
 
                 foreach (var child in children)
                 {
-                    if (child is Control c)
+                    if (child is Control c && c.IsVisible)
                     {
                         var peer = GetOrCreatePeer(c);
 
@@ -185,6 +185,9 @@ namespace Avalonia.Controls.Automation.Peers
         {
             switch (e.Property.Name)
             {
+                case nameof(Visual.IsVisible):
+                    (GetParent() as ControlAutomationPeer)?.InvalidateStructure();
+                    break;
                 case nameof(Visual.TransformedBounds):
                     InvalidateProperties();
                     break;
