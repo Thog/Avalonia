@@ -55,6 +55,8 @@ namespace Avalonia.Win32.Automation
             }
         }
 
+        protected override AutomationProvider? GetParent() => null;
+
         protected override void UpdateCore(bool notify)
         {
             base.UpdateCore(notify);

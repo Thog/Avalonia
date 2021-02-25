@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
+using Avalonia.Controls.Automation.Peers;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -168,5 +169,7 @@ namespace Avalonia.Controls.Primitives
                 return ClientSize;
             }
         }
+
+        protected override AutomationPeer OnCreateAutomationPeer() => new PopupRootAutomationPeer(this);
     }
 }

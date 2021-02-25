@@ -220,6 +220,16 @@ namespace Avalonia.Win32.Automation
 
         void IInvokeProvider.Invoke() => InvokeSync<IInvocableAutomationPeer>(x => x.Invoke());
 
+        protected virtual AutomationProvider? GetParent()
+        {
+            if (_parent is null)
+            {
+                _parent = InvokeSync(() => Peer.GetParent())?.PlatformImpl as AutomationProvider;
+            }
+
+            return _parent;
+        }
+
         protected void InvokeSync(Action action)
         {
             if (_isDisposed)
@@ -309,17 +319,6 @@ namespace Avalonia.Win32.Automation
                 if (notify)
                     UiaCoreProviderApi.UiaRaiseAutomationPropertyChangedEvent(this, (int)id, null, null);
             }
-        }
-
-        private AutomationProvider? GetParent()
-        {
-            if (_parent is null && !(this is IRawElementProviderFragmentRoot))
-            {
-                _parent = InvokeSync(() => Peer.GetParent())?.PlatformImpl as AutomationProvider ??
-                    throw new AvaloniaInternalException($"Could not find parent AutomationProvider for {Peer}.");
-            }
-
-            return _parent;
         }
 
         private void EnsureChildren()

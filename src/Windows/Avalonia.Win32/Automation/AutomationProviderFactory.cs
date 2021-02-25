@@ -53,6 +53,7 @@ namespace Avalonia.Win32.Automation
                     AutomationRole.TabItem => UiaControlTypeId.TabItem,
                     AutomationRole.Text => UiaControlTypeId.Text,
                     AutomationRole.Toggle => UiaControlTypeId.Button,
+                    AutomationRole.Window => UiaControlTypeId.Window,
                     _ => UiaControlTypeId.Custom,
                 };
 

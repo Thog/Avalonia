@@ -31,7 +31,6 @@ namespace Avalonia.Controls.UnitTests.Automation
             var root = new AutomationTestRoot(panel);
             var target = ControlAutomationPeer.GetOrCreatePeer(panel);
 
-            Assert.Equal(2, target.GetChildCount());
             Assert.Equal(
                 panel.GetVisualChildren(),
                 target.GetChildren().Cast<ControlAutomationPeer>().Select(x => x.Owner));
@@ -54,12 +53,10 @@ namespace Avalonia.Controls.UnitTests.Automation
             var root = new AutomationTestRoot(contentControl);
             var target = ControlAutomationPeer.GetOrCreatePeer(contentControl);
 
-            Assert.Equal(0, target.GetChildCount());
             Assert.Empty(target.GetChildren());
 
             contentControl.Measure(Size.Infinity);
 
-            Assert.Equal(1, target.GetChildCount());
             Assert.Equal(1, target.GetChildren().Count);
         }
 

@@ -28,7 +28,7 @@ namespace Avalonia.Controls.Automation.Peers
             owner.DetachedFromVisualTree += OwnerVisualTreeAttachedDetached;
             
             var visualChildren = ((IVisual)owner).VisualChildren;
-            visualChildren.CollectionChanged += InvalidateStructure;
+            visualChildren.CollectionChanged += VisualChildrenChanged;
         }
 
         public Control Owner { get; }
@@ -60,20 +60,6 @@ namespace Avalonia.Controls.Automation.Peers
                 return Rect.Empty;
 
             return new Rect(Owner.Bounds.Size).TransformToAABB(t.Value);
-        }
-
-        protected override int GetChildCountCore()
-        {
-            var children = ((IVisual)Owner).VisualChildren;
-            var result = 0;
-
-            foreach (var child in children)
-            {
-                if (child is Control c && c.IsVisible)
-                    ++result;
-            }
-
-            return result;
         }
 
         protected override IReadOnlyList<AutomationPeer>? GetChildrenCore()
@@ -150,6 +136,12 @@ namespace Avalonia.Controls.Automation.Peers
             return false;
         }
 
+        protected void ResetChildrenCache()
+        {
+            _childrenValid = false;
+            PlatformImpl!.StructureChanged();
+        }
+
         private IPlatformAutomationInterface? GetPlatformImplFactory()
         {
             var root = Owner.GetVisualRoot();
@@ -168,13 +160,7 @@ namespace Avalonia.Controls.Automation.Peers
             PlatformImpl!.PropertyChanged();
         }
 
-        private void InvalidateStructure()
-        {
-            _childrenValid = false;
-            PlatformImpl!.StructureChanged();
-        }
-
-        private void InvalidateStructure(object sender, EventArgs e) => InvalidateStructure();
+        private void VisualChildrenChanged(object sender, EventArgs e) => ResetChildrenCache();
 
         private void OwnerVisualTreeAttachedDetached(object sender, VisualTreeAttachmentEventArgs e)
         {
@@ -186,7 +172,7 @@ namespace Avalonia.Controls.Automation.Peers
             switch (e.Property.Name)
             {
                 case nameof(Visual.IsVisible):
-                    (GetParent() as ControlAutomationPeer)?.InvalidateStructure();
+                    (GetParent() as ControlAutomationPeer)?.ResetChildrenCache();
                     break;
                 case nameof(Visual.TransformedBounds):
                     InvalidateProperties();

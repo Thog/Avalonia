@@ -31,11 +31,6 @@ namespace Avalonia.Controls.Automation.Peers
         public Rect GetBoundingRectangle() => GetBoundingRectangleCore();
 
         /// <summary>
-        /// Gets the number of child automation peers.
-        /// </summary>
-        public int GetChildCount() => GetChildCountCore();
-
-        /// <summary>
         /// Gets the child automation peers.
         /// </summary>
         public IReadOnlyList<AutomationPeer> GetChildren() => GetChildrenCore() ?? Array.Empty<AutomationPeer>();
@@ -104,7 +99,6 @@ namespace Avalonia.Controls.Automation.Peers
         protected abstract void BringIntoViewCore();
         protected abstract IAutomationPeerImpl CreatePlatformImplCore();
         protected abstract Rect GetBoundingRectangleCore();
-        protected abstract int GetChildCountCore();
         protected abstract IReadOnlyList<AutomationPeer>? GetChildrenCore();
         protected abstract string GetClassNameCore();
         protected abstract string GetLocalizedControlTypeCore();

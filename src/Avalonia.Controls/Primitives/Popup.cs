@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reactive.Disposables;
+using Avalonia.Controls.Automation.Peers;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
@@ -513,6 +514,8 @@ namespace Avalonia.Controls.Primitives
             base.OnDetachedFromLogicalTree(e);
             Close();
         }
+
+        protected override AutomationPeer OnCreateAutomationPeer() => new PopupAutomationPeer(this);
 
         private static IDisposable SubscribeToEventHandler<T, TEventHandler>(T target, TEventHandler handler, Action<T, TEventHandler> subscribe, Action<T, TEventHandler> unsubscribe)
         {
