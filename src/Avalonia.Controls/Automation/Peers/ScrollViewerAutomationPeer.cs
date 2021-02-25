@@ -21,5 +21,11 @@
         public void PageUp() => (Owner as ScrollViewer)?.PageUp();
 
         protected override string GetLocalizedControlTypeCore() => "scroll viewer";
+
+        protected override bool IsControlElementCore()
+        {
+            // Return false if the control is part of a control template.
+            return Owner.TemplatedParent is null && base.IsControlElementCore();
+        }
     }
 }

@@ -113,7 +113,7 @@ namespace Avalonia.Controls.Automation.Peers
 
         protected override AutomationRole GetRoleCore() => _role;
         protected override bool HasKeyboardFocusCore() => Owner.IsFocused;
-        protected override bool IsControlElementCore() => _role != AutomationRole.None && Owner.TemplatedParent is null;
+        protected override bool IsControlElementCore() => GetRole() != AutomationRole.None;
         protected override bool IsEnabledCore() => Owner.IsEnabled;
         protected override bool IsKeyboardFocusableCore() => Owner.Focusable;
         protected override void SetFocusCore() => Owner.Focus();

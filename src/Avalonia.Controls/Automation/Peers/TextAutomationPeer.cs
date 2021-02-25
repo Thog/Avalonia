@@ -10,5 +10,11 @@ namespace Avalonia.Controls.Automation.Peers
         }
 
         protected override string? GetNameCore() => Owner.GetValue(TextBlock.TextProperty);
+
+        protected override bool IsControlElementCore()
+        {
+            // Return false if the control is part of a control template.
+            return Owner.TemplatedParent is null && base.IsControlElementCore();
+        }
     }
 }

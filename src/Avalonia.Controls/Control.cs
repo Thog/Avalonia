@@ -204,10 +204,7 @@ namespace Avalonia.Controls
             }
         }
 
-        protected virtual AutomationPeer OnCreateAutomationPeer()
-        {
-            return new ControlAutomationPeer(this, AutomationRole.None);
-        }
+        protected virtual AutomationPeer OnCreateAutomationPeer() => new NoneAutomationPeer(this);
 
         internal AutomationPeer GetOrCreateAutomationPeer()
         {
