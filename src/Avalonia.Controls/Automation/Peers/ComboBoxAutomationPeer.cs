@@ -41,7 +41,7 @@ namespace Avalonia.Controls.Automation.Peers
 
             if (e.Property == ComboBox.IsDropDownOpenProperty)
             {
-                PlatformImpl?.PropertyChanged();
+                InvalidateProperties();
             }
         }
 

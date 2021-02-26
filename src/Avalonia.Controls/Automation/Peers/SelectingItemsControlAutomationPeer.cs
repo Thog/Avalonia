@@ -73,7 +73,7 @@ namespace Avalonia.Controls.Automation.Peers
 
         protected virtual void OwnerSelectionChanged(object sender, SelectionModelSelectionChangedEventArgs e)
         {
-            PlatformImpl?.PropertyChanged();
+            InvalidateProperties();
         }
     }
 }

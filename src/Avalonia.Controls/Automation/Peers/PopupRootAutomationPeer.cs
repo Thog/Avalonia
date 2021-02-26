@@ -1,5 +1,6 @@
 ﻿using System;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 
@@ -7,24 +8,22 @@ using Avalonia.VisualTree;
 
 namespace Avalonia.Controls.Automation.Peers
 {
-    public class PopupRootAutomationPeer : ControlAutomationPeer
+    public class PopupRootAutomationPeer : WindowBaseAutomationPeer
     {
-        public PopupRootAutomationPeer(PopupRoot owner, AutomationRole role = AutomationRole.Window)
-            : base(owner, role) 
+        public PopupRootAutomationPeer(PopupRoot owner)
+            : base(owner)
         {
+            if (owner.IsVisible)
+                StartTrackingFocus();
+            else
+                owner.Opened += OnOpened;
             owner.Closed += OnClosed;
-        }
-
-        public AutomationPeer? GetPeerFromPoint(Point p)
-        {
-            return Owner.GetVisualAt(p)?
-                .FindAncestorOfType<Control>(includeSelf: true) is Control c ?
-                    GetOrCreatePeer(c) : null;
         }
 
         protected override AutomationPeer? GetParentCore()
         {
-            if (Owner.GetLogicalParent() is Control parent)
+            if (Owner.GetLogicalParent() is Control parent &&
+                ((IVisual)parent).IsAttachedToVisualTree)
             {
                 return GetOrCreatePeer(parent);
             }
@@ -32,9 +31,16 @@ namespace Avalonia.Controls.Automation.Peers
             return null;
         }
 
+        private void OnOpened(object sender, EventArgs e)
+        {
+            ((PopupRoot)Owner).Opened -= OnOpened;
+            StartTrackingFocus();
+        }
+
         private void OnClosed(object sender, EventArgs e)
         {
             ((PopupRoot)Owner).Closed -= OnClosed;
+            StopTrackingFocus();
             InvalidatePlatformImpl();
         }
     }

@@ -39,6 +39,12 @@ namespace Avalonia.Controls.Automation.Peers
             return element.GetOrCreateAutomationPeer();
         }
 
+        public void ResetChildrenCache()
+        {
+            _childrenValid = false;
+            PlatformImpl!.StructureChanged();
+        }
+
         protected override void BringIntoViewCore() => Owner.BringIntoView();
 
         protected override IAutomationPeerImpl CreatePlatformImplCore()
@@ -136,12 +142,6 @@ namespace Avalonia.Controls.Automation.Peers
             return false;
         }
 
-        protected void ResetChildrenCache()
-        {
-            _childrenValid = false;
-            PlatformImpl!.StructureChanged();
-        }
-
         private IPlatformAutomationInterface? GetPlatformImplFactory()
         {
             var root = Owner.GetVisualRoot();
@@ -152,12 +152,6 @@ namespace Avalonia.Controls.Automation.Peers
                 return null;
 
             return (root as TopLevel)?.PlatformImpl as IPlatformAutomationInterface;
-        }
-
-        private void InvalidateProperties()
-        {
-            _childrenValid = false;
-            PlatformImpl!.PropertyChanged();
         }
 
         private void VisualChildrenChanged(object sender, EventArgs e) => ResetChildrenCache();

@@ -11,6 +11,7 @@ namespace Avalonia.Controls.Automation.Peers
     /// </summary>
     public abstract class AutomationPeer
     {
+        private bool _isCreatingPlatformImpl;
         private IAutomationPeerImpl? _platformImpl;
 
         /// <summary>
@@ -125,12 +126,28 @@ namespace Avalonia.Controls.Automation.Peers
             CreatePlatformImpl();
         }
 
+        protected void InvalidateProperties()
+        {
+            _platformImpl?.PropertyChanged();
+        }
+
         internal void CreatePlatformImpl()
         {
             if (_platformImpl is object)
                 throw new AvaloniaInternalException("AutomationPeer already has a PlatformImpl.");
-            _platformImpl = CreatePlatformImplCore() ??
-                throw new InvalidOperationException("CreatePlatformImplCore returned null.");
+            if (_isCreatingPlatformImpl)
+                throw new AvaloniaInternalException("AutomationPeer encountered recursion creating PlatformImpl.");
+
+            try
+            {
+                _isCreatingPlatformImpl = true;
+                _platformImpl = CreatePlatformImplCore() ??
+                    throw new InvalidOperationException("CreatePlatformImplCore returned null.");
+            }
+            finally
+            {
+                _isCreatingPlatformImpl = false;
+            }
         }
     }
 }

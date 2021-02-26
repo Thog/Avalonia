@@ -23,7 +23,7 @@ namespace Avalonia.Controls.Automation.Peers
                 e.Property == RangeBase.MaximumProperty ||
                 e.Property == RangeBase.ValueProperty)
             {
-                PlatformImpl?.PropertyChanged();
+                InvalidateProperties();
             }
         }
     }

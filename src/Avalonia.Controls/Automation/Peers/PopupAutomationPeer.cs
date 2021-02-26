@@ -22,7 +22,9 @@ namespace Avalonia.Controls.Automation.Peers
         {
             var owner = (Popup)Owner;
 
-            if (owner.IsOpen && ((IVisualTreeHost)owner).Root is Control popupRoot)
+            if (owner.IsOpen && 
+                ((IVisualTreeHost)owner).Root is Control popupRoot &&
+                ((IVisual)owner).IsAttachedToVisualTree)
             {
                 _children ??= new ControlAutomationPeer?[1];
                 _children[0] = (ControlAutomationPeer)GetOrCreatePeer(popupRoot);

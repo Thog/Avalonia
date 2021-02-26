@@ -4,9 +4,9 @@
 
 namespace Avalonia.Win32.Automation
 {
-    internal class WindowProvider : WindowBaseProvider
+    internal class PopupRootProvider : WindowBaseProvider
     {
-        public WindowProvider(WindowAutomationPeer peer)
+        public PopupRootProvider(PopupRootAutomationPeer peer)
             : base(peer)
         {
         }

@@ -687,30 +687,7 @@ namespace Avalonia.Win32
 
         public IAutomationPeerImpl CreateAutomationPeerImpl(AutomationPeer peer, WindowImpl visualRoot)
         {
-            if (peer is WindowAutomationPeer windowPeer &&
-                windowPeer.Owner is Window window &&
-                window.PlatformImpl == this)
-            {
-                if (_automationProvider is null)
-                {
-                    _automationProvider = new WindowProvider(this, windowPeer);
-                    var _ = _automationProvider.Update(false);
-                }
-
-                return _automationProvider;
-            }
-            else
-            {
-                if (_automationProvider is null)
-                {
-                    ControlAutomationPeer.GetOrCreatePeer((Control)_owner);
-                }
-
-                if (_automationProvider is WindowProvider windowProvider)
-                    return AutomationProviderFactory.Create(peer, visualRoot, windowProvider);
-                else
-                    throw new InvalidOperationException("Unable to create automation peer.");
-            }
+            return AutomationProviderFactory.Create(peer);
         }
 
         protected virtual IntPtr CreateWindowOverride(ushort atom)
@@ -765,7 +742,7 @@ namespace Avalonia.Win32
                 throw new Win32Exception();
             }
 
-            Handle = new PlatformHandle(_hwnd, PlatformConstants.WindowHandleType);
+            Handle = new WindowImplPlatformHandle(this);
 
             _multitouch = Win32Platform.Options.EnableMultitouch ?? true;
 
@@ -1312,6 +1289,14 @@ namespace Avalonia.Win32
             public bool IsResizable;
             public SystemDecorations Decorations;
             public bool IsFullScreen;
+        }
+
+        private class WindowImplPlatformHandle : IPlatformHandle
+        {
+            private readonly WindowImpl _owner;
+            public WindowImplPlatformHandle(WindowImpl owner) => _owner = owner;
+            public IntPtr Handle => _owner.Hwnd;
+            public string HandleDescriptor => PlatformConstants.WindowHandleType;
         }
     }
 }

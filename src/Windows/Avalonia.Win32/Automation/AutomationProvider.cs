@@ -6,10 +6,12 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Controls.Automation;
 using Avalonia.Controls.Automation.Peers;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Avalonia.Win32.Interop.Automation;
 
 #nullable enable
@@ -27,59 +29,35 @@ namespace Avalonia.Win32.Automation
         private readonly UiaControlTypeId _controlType;
         private readonly string _localizedControlType;
         private readonly bool _isControlElement;
-        private readonly WeakReference<AutomationPeer> _peer;
         private readonly WindowImpl _visualRoot;
-        private readonly IRawElementProviderFragmentRoot _fragmentRoot;
         private readonly int[] _runtimeId;
         private AutomationProvider? _parent;
+        private bool _isParentInitialized;
         private Rect _boundingRect;
         private List<AutomationProvider>? _children;
         private bool _childrenValid;
         private string? _className;
+        private IRawElementProviderFragmentRoot? _fragmentRoot;
         private bool _hasKeyboardFocus;
         private bool _isKeyboardFocusable;
         private bool _isEnabled;
         private string? _name;
         private bool _isDisposed;
 
-        public AutomationProvider(
-            AutomationPeer peer,
-            UiaControlTypeId controlType,
-            WindowImpl visualRoot,
-            IRawElementProviderFragmentRoot fragmentRoot)
+        public AutomationProvider(ControlAutomationPeer peer)
         {
             Dispatcher.UIThread.VerifyAccess();
 
-            _peer = new WeakReference<AutomationPeer>(peer ?? throw new ArgumentNullException(nameof(peer)));
-            _controlType = controlType;
+            Peer = peer;
+
+            _controlType = RoleToControlType(peer.GetRole());
             _localizedControlType = peer.GetLocalizedControlType();
             _isControlElement = peer.IsControlElement();
-            _visualRoot = visualRoot ?? throw new ArgumentNullException(nameof(visualRoot));
-            _fragmentRoot = fragmentRoot ?? throw new ArgumentNullException(nameof(fragmentRoot));
+            _visualRoot = (WindowImpl)GetRoot(peer.Owner).PlatformImpl;
             _runtimeId = new int[] { 3, Peer.GetHashCode() };
         }
 
-        protected AutomationProvider(AutomationPeer peer, WindowImpl visualRoot)
-        {
-            Dispatcher.UIThread.VerifyAccess();
-
-            _peer = new WeakReference<AutomationPeer>(peer ?? throw new ArgumentNullException(nameof(peer)));
-            _controlType = UiaControlTypeId.Window;
-            _localizedControlType = peer.GetLocalizedControlType();
-            _isControlElement = true;
-            _visualRoot = visualRoot;
-            _fragmentRoot = (IRawElementProviderFragmentRoot)this;
-            _runtimeId = new int[] { 3, Peer.GetHashCode() };
-        }
-
-        public AutomationPeer Peer
-        {
-            get
-            {
-                _peer.TryGetTarget(out var value);
-                return value;
-            }
-        }
+        public ControlAutomationPeer Peer { get; }
 
         public Rect BoundingRectangle 
         { 
@@ -92,8 +70,19 @@ namespace Avalonia.Win32.Automation
             }
         }
 
-        public virtual IRawElementProviderFragmentRoot FragmentRoot => _fragmentRoot;
-        
+        public virtual IRawElementProviderFragmentRoot? FragmentRoot 
+        { 
+            get
+            {
+                return _fragmentRoot ??= InvokeSync(() =>
+                {
+                    var root = GetRoot(Peer.Owner);
+                    var rootPeer = ControlAutomationPeer.GetOrCreatePeer(root);
+                    return (IRawElementProviderFragmentRoot)rootPeer.PlatformImpl;
+                });
+            }
+        }
+
         public ProviderOptions ProviderOptions => ProviderOptions.ServerSideProvider;
         public virtual IRawElementProviderSimple? HostRawElementProvider => null;
 
@@ -220,14 +209,9 @@ namespace Avalonia.Win32.Automation
 
         void IInvokeProvider.Invoke() => InvokeSync<IInvocableAutomationPeer>(x => x.Invoke());
 
-        protected virtual AutomationProvider? GetParent()
+        public void UpdateFocus(bool notify)
         {
-            if (_parent is null)
-            {
-                _parent = InvokeSync(() => Peer.GetParent())?.PlatformImpl as AutomationProvider;
-            }
-
-            return _parent;
+            UpdateProperty(UiaPropertyId.HasKeyboardFocus, ref _hasKeyboardFocus, Peer.HasKeyboardFocus(), notify);
         }
 
         protected void InvokeSync(Action action)
@@ -299,10 +283,10 @@ namespace Avalonia.Win32.Automation
             _className = Peer.GetClassName();
 
             UpdateProperty(UiaPropertyId.BoundingRectangle, ref _boundingRect, Peer.GetBoundingRectangle(), notify);
-            UpdateProperty(UiaPropertyId.HasKeyboardFocus, ref _hasKeyboardFocus, Peer.HasKeyboardFocus(), notify);
             UpdateProperty(UiaPropertyId.IsKeyboardFocusable, ref _isKeyboardFocusable, Peer.IsKeyboardFocusable(), notify);
             UpdateProperty(UiaPropertyId.IsEnabled, ref _isEnabled, Peer.IsEnabled(), notify);
             UpdateProperty(UiaPropertyId.Name, ref _name, Peer.GetName(), notify);
+            UpdateFocus(notify);
             UpdateExpandCollapse(notify);
             UpdateRangeValue(notify);
             UpdateScroll(notify);
@@ -355,7 +339,18 @@ namespace Avalonia.Win32.Automation
             }
         }
 
-        private IRawElementProviderFragment? GetSibling(AutomationProvider child, int direction)
+        private AutomationProvider? GetParent()
+        {
+            if (!_isParentInitialized)
+            {
+                _parent = InvokeSync(() => Peer.GetParent())?.PlatformImpl as AutomationProvider;
+                _isParentInitialized = true;
+            }
+
+            return _parent;
+        }
+
+        private AutomationProvider? GetSibling(AutomationProvider child, int direction)
         {
             EnsureChildren();
 
@@ -372,6 +367,35 @@ namespace Avalonia.Win32.Automation
             }
 
             return null;
+        }
+
+        private static WindowBase GetRoot(Control control)
+        {
+            return control.GetVisualRoot() as WindowBase ??
+                throw new AvaloniaInternalException("Cannot create automation provider for non-rooted control.");
+        }
+
+        private static UiaControlTypeId RoleToControlType(AutomationRole role)
+        {
+            return role switch
+            {
+                AutomationRole.Button => UiaControlTypeId.Button,
+                AutomationRole.CheckBox => UiaControlTypeId.CheckBox,
+                AutomationRole.ComboBox => UiaControlTypeId.ComboBox,
+                AutomationRole.Edit => UiaControlTypeId.Edit,
+                AutomationRole.Group => UiaControlTypeId.Group,
+                AutomationRole.List => UiaControlTypeId.List,
+                AutomationRole.ListItem => UiaControlTypeId.ListItem,
+                AutomationRole.Menu => UiaControlTypeId.Menu,
+                AutomationRole.MenuItem => UiaControlTypeId.MenuItem,
+                AutomationRole.Slider => UiaControlTypeId.Slider,
+                AutomationRole.TabControl => UiaControlTypeId.Tab,
+                AutomationRole.TabItem => UiaControlTypeId.TabItem,
+                AutomationRole.Text => UiaControlTypeId.Text,
+                AutomationRole.Toggle => UiaControlTypeId.Button,
+                AutomationRole.Window => UiaControlTypeId.Window,
+                _ => UiaControlTypeId.Custom,
+            };
         }
     }
 }

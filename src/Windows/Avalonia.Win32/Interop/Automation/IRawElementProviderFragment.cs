@@ -29,6 +29,6 @@ namespace Avalonia.Win32.Interop.Automation
         Rect BoundingRectangle { get; }
         IRawElementProviderSimple[]? GetEmbeddedFragmentRoots();
         void SetFocus();
-        IRawElementProviderFragmentRoot FragmentRoot { get; }
+        IRawElementProviderFragmentRoot? FragmentRoot { get; }
     }
 }
