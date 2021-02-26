@@ -49,12 +49,12 @@ namespace Avalonia.Win32.Automation
 
             var peer = (WindowBaseAutomationPeer)Peer;
             var oldFocus = _focus?.Peer;
-            var newFocus = peer.GetFocus();
+            var newFocus = peer.GetFocus() as ControlAutomationPeer;
 
             if (newFocus != oldFocus)
             {
-                var oldProvider = oldFocus?.PlatformImpl as AutomationProvider;
-                var newProvider = newFocus?.PlatformImpl as AutomationProvider;
+                var oldProvider = GetProvider(oldFocus);
+                var newProvider = GetProvider(newFocus);
                 oldProvider?.UpdateFocus(false);
                 newProvider?.UpdateFocus(false);
                 _focus = newProvider;
@@ -66,6 +66,11 @@ namespace Avalonia.Win32.Automation
                         (int)UiaEventId.AutomationFocusChanged);
                 }
             }
+        }
+
+        private AutomationProvider? GetProvider(ControlAutomationPeer? peer)
+        {
+            return ReferenceEquals(peer, Peer) ? this : peer?.PlatformImpl as AutomationProvider;
         }
     }
 }

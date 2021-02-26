@@ -31,6 +31,8 @@ namespace Avalonia.Controls.Automation.Peers
             return null;
         }
 
+        protected override bool IsControlElementCore() => false;
+
         private void OnOpened(object sender, EventArgs e)
         {
             ((PopupRoot)Owner).Opened -= OnOpened;
