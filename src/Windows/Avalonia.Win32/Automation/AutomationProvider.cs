@@ -88,11 +88,10 @@ namespace Avalonia.Win32.Automation
 
         public void Dispose()
         {
-            if (_isDisposed)
-                return;
-
+            // Feels like we should be calling UiaDisconnectProvider here, but that slows things
+            // down HORRIBLY and looking through the WPF codebase seems that function is never
+            // called there.
             _isDisposed = true;
-            UiaCoreProviderApi.UiaDisconnectProvider(this);
         }
         
         public void PropertyChanged() 
