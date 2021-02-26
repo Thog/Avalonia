@@ -215,10 +215,8 @@ namespace Avalonia.Controls
                 return _automationPeer;
             }
 
-            var peer = OnCreateAutomationPeer() ??
-                throw new InvalidOperationException("OnCreateAutomationPeer returned null.");
-            peer.CreatePlatformImpl();
-            _automationPeer = peer;
+            _automationPeer = OnCreateAutomationPeer();
+            _automationPeer.CreatePlatformImpl();
             return _automationPeer;
         }
     }
