@@ -9,6 +9,7 @@ namespace Sandbox
             AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()
+                .With(new Win32PlatformOptions { UseWgl = true })
                 .StartWithClassicDesktopLifetime(args);
         }
     }
